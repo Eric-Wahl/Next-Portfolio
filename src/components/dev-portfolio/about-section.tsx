@@ -23,7 +23,7 @@ export function AboutSection() {
 
   const timelineItems = [
       {
-        period: "2026 - Présent",
+        period: "2026 - Today",
         title: t("adp.title"),
         company: t("adp.subtitle"),
         description: t("adp.description"),
