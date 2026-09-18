@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { LOCALES } from "~/lib/utils";
 
-const baseUrl = "https://ericphlpp.com";
+const baseUrl = "https://ericwhl.com";
 
 const staticRoutes = [
   "", // Home page

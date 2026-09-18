@@ -142,17 +142,22 @@
         "description": "Développement d'applications web et mobile, impression 3D, conseil en technologies et animation d'ateliers autour de la tech."
       },
       "ynov": {
-        "title": "Mastère Ynov - Expert Développement Logiciel",
+        "title": "Mastère Ynov - Expert Développement Logiciel - Major",
         "subtitle": "Ynov Toulouse",
         "description": "Expert Développement Logiciel. Major de promotion."
       },
       "adp": {
+        "title": "Ingénieur Développement & DevOps - ADP GSI",
+        "subtitle": "Développeur Java Informatique",
+        "description": "Développement d'une application pour le paramétrage des moteurs de paie dans plusieurs pays."
+      },
+      "adp_apprenticeship": {
         "title": "Alternance - ADP GSI",
         "subtitle": "Développeur Java Informatique",
         "description": "Développement d'une application pour le paramétrage des moteurs de paie dans plusieurs pays."
       },
       "but": {
-        "title": "BUT Informatique",
+        "title": "BUT Informatique - Major de promotion",
         "subtitle": "IUT de Blagnac - Université Toulouse II Jean Jaurès",
         "description": "Formation en informatique avec une spécialisation en développement logiciel. Major de promotion."
       },

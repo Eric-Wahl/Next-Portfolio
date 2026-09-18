@@ -1,7 +1,7 @@
 // ===================================================================
 // ============================= CONSTANTS ===========================
 // ===================================================================
-export const EMAIL = "ericphlpp@proton.me";
+export const EMAIL = "ericwhl@proton.me";
 export const DEV_PROJECT_MDX_CONTENT_MARKER = "<!--tech-->";
 
 const CONTENT_DIR_PATH = "src/content";

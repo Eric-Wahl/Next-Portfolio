@@ -22,14 +22,34 @@ export function AboutSection() {
   const t = useTranslations("DevPortfolio.About");
 
   const timelineItems = [
+      {
+        period: "2026 - Présent",
+        title: t("adp.title"),
+        company: t("adp.subtitle"),
+        description: t("adp.description"),
+        color1: "#ffac1d",
+        color2: "#ed4e50",
+        percentage: 100,
+        icon: MdWork,
+      },
+      {
+      period: "2021 - 2026",
+      title: t("adp_apprenticeship.title"),
+      company: t("adp_apprenticeship.subtitle"),
+      description: t("adp_apprenticeship.description"),
+      color1: "#ffac1d",
+      color2: "#ed4e50",
+      percentage: 100,
+      icon: MdWork,
+    },
     {
-      period: "2025 - Présent",
+      period: "2025 - 2026",
       title: t("eko.title"),
       company: t("eko.subtitle"),
       description: t("eko.description"),
       color1: "#f9ce22",
       color2: "#ed4e50",
-      percentage: 25,
+      percentage: 100,
       icon: MdWork,
     },
     {
@@ -39,18 +59,8 @@ export function AboutSection() {
       description: t("ynov.description"),
       color1: "#f9ce22",
       color2: "#ed4e50",
-      percentage: 98,
+      percentage: 100,
       icon: MdSchool,
-    },
-    {
-      period: "2021 - 2026",
-      title: t("adp.title"),
-      company: t("adp.subtitle"),
-      description: t("adp.description"),
-      color1: "#ffac1d",
-      color2: "#ed4e50",
-      percentage: 90,
-      icon: MdWork,
     },
     {
       period: "2021 - 2024",

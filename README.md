@@ -5,7 +5,7 @@
     
 This is my personal portfolio and blog, showcasing my work in web development, photography, and 3D printing. The site is built with Next.js, leveraging its powerful features for a seamless user experience.
 
-[Check out my portfolio](https://ericphlpp.com)
+[Check out my portfolio](https://ericwhl.com)
 
 ![Portfolio Screenshot](./img/hero.png)
 
