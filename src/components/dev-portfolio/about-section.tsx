@@ -29,7 +29,7 @@ export function AboutSection() {
         description: t("adp.description"),
         color1: "#ffac1d",
         color2: "#ed4e50",
-        percentage: 100,
+        percentage: 8,
         icon: MdWork,
       },
       {
@@ -47,7 +47,7 @@ export function AboutSection() {
       title: t("eko.title"),
       company: t("eko.subtitle"),
       description: t("eko.description"),
-      color1: "#f9ce22",
+      color1: "#9867f0",
       color2: "#ed4e50",
       percentage: 100,
       icon: MdWork,

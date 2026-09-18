@@ -132,7 +132,7 @@
     "About": {
       "title": "About",
       "currentRole": "Software Engineer",
-      "roles": "Student • Entrepreneur • IT Apprentice",
+      "roles": "Software Engineer • Entrepreneur • DevOps Enthusiast",
       "tagline": "Crafting digital experiences with passion and precision",
       "timeline": "My Journey",
       "years": " years old",
@@ -147,8 +147,8 @@
         "description": "Student in Software Development. Top of the class."
       },
       "adp": {
-        "title": "Apprenticeship  & DevOps - ADP GSI",
-        "subtitle": "Software Engineer",
+        "title": "Software Engineer & DevOps - ADP GSI",
+        "subtitle": "Java Developer",
         "description": "Development of an application for configuring payroll engines across multiple countries."
       },
       "adp_apprenticeship": {
@@ -168,7 +168,7 @@
       },
       "downloadCV": "Download CV",
       "lastUpdate": "Last Update",
-      "lastUpdateDate": "February 2025",
+      "lastUpdateDate": "September 2026",
       "lastLinkedInPost": "Last LinkedIn Post",
       "seeFullPost": "See Full Post",
       "featured": "Featured",
