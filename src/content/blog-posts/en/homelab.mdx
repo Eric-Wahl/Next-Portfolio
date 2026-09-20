@@ -126,7 +126,7 @@ Another problem, more insidious: the sprawl of accounts. Every service its own l
 
 While hanging around the r/selfhosted subreddit, I stumbled onto **Authentik**. From the very first read, I knew it would be my solution. Authentik is an identity provider (SSO): instead of dozens of accounts, you sign in once, and that identity unlocks every compatible service.
 
-> **For the curious**: Authentik acts as the OIDC provider for Immich, Nextcloud, and Outline. I'd first gone with Authelia, whose YAML configuration worked right up until the token exchange, before running into a cascade of disagreements over `token_endpoint_auth_method`, PKCE, and `response_modes`, each one masking the next. Authentik settles all of that through its interface, with validation as you type. The price to pay is RAM (around 1 GB, versus a few dozen MB for Authelia).
+> **For the curious**: Authentik acts as the OIDC provider for Immich, Nextcloud, and Outline. I'd first gone with Authelia, whose YAML configuration worked right up until the token exchange, before running into a cascade of disagreements over PKCE, and `response_modes`, each one masking the next. Authentik settles all of that through its interface, with validation as you type. The price to pay is RAM (around 1 GB, versus a few dozen MB for Authelia).
 
 ## Thinking Bigger: The Dedicated NAS Decision
 

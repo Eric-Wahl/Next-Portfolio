@@ -21,7 +21,7 @@ Spoiler : deux ans plus tard, j'ai un cluster de trois machines, un NAS de plusi
 
 Avant l'Optiplex, il y avait Docker. À force de m'exercer dessus pour mes projets, un truc a fait tilt : la reproductibilité. Un `docker compose up`, et la même stack se relance à l'identique, ici ou ailleurs, sans le fameux "pourtant ça marche sur ma machine". Cette simplicité m'a donné envie d'aller plus loin, et de creuser du côté du self-hosting.
 
-J'avais déjà tâté du VPS chez OVH pour héberger deux-trois trucs. Alors j'ai fait un calcul rapide, celui que fait tout le monde juste avant de tomber dans le terrier du lapin.
+J'avais déjà tâté du VPS chez OVH pour héberger deux-trois trucs. Alors j'ai fait un calcul rapide, celui que fait tout le monde juste avant de tomber dans se laisser emporter par l'obsession du self-hosting :
 
 > Un VPS avec 2 Go de RAM, 2 vCPU et 50 Go de stockage, ça tourne autour de quelques euros par mois. Chez moi, avec du matériel que j'ai déjà, je peux avoir quatre fois plus de puissance, un contrôle total, et surtout un terrain d'apprentissage sans limite.
 
@@ -61,7 +61,7 @@ Alors j'ai fait la chasse, méthodiquement :
 
 - Ne garder qu'un seul des deux CPU, puis le remplacer par une variante avec plus de cœurs mais cadencée plus bas (le suffixe "L" des Xeon, pour _low power_)
 - Troquer le ventilateur serveur d'origine, une soufflerie de décollage, contre un Noctua silencieux
-- Passer un temps considérable dans le BIOS à désactiver tout ce que je n'utiliserais jamais
+- Passer un temps considérable dans le BIOS à désactiver tout ce que je n'utiliserai jamais
 
 Le silence et l'économie d'énergie sont devenus des critères de conception à part entière, au même titre que la puissance. Une leçon que je réappliquerai à chaque évolution.
 
@@ -126,7 +126,7 @@ Autre problème, plus insidieux : la prolifération des comptes. Chaque service 
 
 En traînant sur le subreddit r/selfhosted, je tombe par hasard sur **Authentik**. Dès la première lecture, je sais que ce sera ma solution. Authentik est un fournisseur d'identité (SSO) : au lieu de dizaines de comptes, on se connecte une seule fois, et cette identité déverrouille tous les services compatibles.
 
-> **Pour les connaisseurs** : Authentik joue le rôle de fournisseur OIDC pour Immich, Nextcloud et Outline. J'étais d'abord parti sur Authelia, dont la configuration YAML fonctionnait jusqu'à l'échange de jeton, avant de se heurter à une cascade de désaccords sur `token_endpoint_auth_method`, PKCE et les `response_modes`, chacun masquant le suivant. Authentik règle tout ça via son interface, avec validation à la saisie. Le prix à payer, c'est la RAM (autour d'1 Go, contre quelques dizaines de Mo pour Authelia).
+> **Pour les connaisseurs** : Authentik joue le rôle de fournisseur OIDC pour Immich, Nextcloud et Outline. J'étais d'abord parti sur Authelia, dont la configuration YAML fonctionnait jusqu'à l'échange de jeton, avant de se heurter à une cascade de désaccords, PKCE et les `response_modes`, chacun masquant le suivant. Authentik règle tout ça via son interface, avec validation à la saisie. Le prix à payer, c'est la RAM (autour d'1 Go, contre quelques dizaines de Mo pour Authelia).
 
 ## Voir plus grand : la décision du NAS dédié
 
