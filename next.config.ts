@@ -40,6 +40,11 @@ const config: NextConfig = {
       },
       {
         protocol: "https" as const,
+        hostname: "makerworld.bblmw.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https" as const,
         hostname: "live.staticflickr.com",
         pathname: "/**",
       },
