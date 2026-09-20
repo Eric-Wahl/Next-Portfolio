@@ -347,42 +347,42 @@ export function WorkspaceSection() {
                   <h3 className="mb-4 font-serif text-lg text-amber-50">
                     {t("workbench.statsTitle")}
                   </h3>
-                    <div className="flex flex-1 flex-col justify-center space-y-6">
-                      {/* Print Count */}
-                      <div className="text-center">
-                        <motion.div
-                          initial={{ scale: 0.5, opacity: 0 }}
-                          whileInView={{ scale: 1, opacity: 1 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.5, delay: 0.2 }}
-                          className="mb-1 font-serif text-3xl font-light text-amber-400"
-                        >
-                          297
-                        </motion.div>
-                        <p className="text-xs tracking-wider text-stone-500 uppercase">
-                          {t("workbench.statsPrints")}
-                        </p>
-                      </div>
-
-                      {/* Divider */}
-                      <div className="mx-auto h-px w-16 bg-gradient-to-r from-transparent via-amber-900/40 to-transparent" />
-
-                      {/* Print Time */}
-                      <div className="text-center">
-                        <motion.div
-                          initial={{ scale: 0.5, opacity: 0 }}
-                          whileInView={{ scale: 1, opacity: 1 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.5, delay: 0.3 }}
-                          className="mb-1 font-serif text-3xl font-light text-amber-400"
-                        >
-                          1550
-                        </motion.div>
-                        <p className="text-xs tracking-wider text-stone-500 uppercase">
-                          {t("workbench.statsHours")}
-                        </p>
-                      </div>
+                  <div className="flex flex-1 flex-col justify-center space-y-6">
+                    {/* Print Count */}
+                    <div className="text-center">
+                      <motion.div
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        whileInView={{ scale: 1, opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="mb-1 font-serif text-3xl font-light text-amber-400"
+                      >
+                        397
+                      </motion.div>
+                      <p className="text-xs tracking-wider text-stone-500 uppercase">
+                        {t("workbench.statsPrints")}
+                      </p>
                     </div>
+
+                    {/* Divider */}
+                    <div className="mx-auto h-px w-16 bg-gradient-to-r from-transparent via-amber-900/40 to-transparent" />
+
+                    {/* Print Time */}
+                    <div className="text-center">
+                      <motion.div
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        whileInView={{ scale: 1, opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                        className="mb-1 font-serif text-3xl font-light text-amber-400"
+                      >
+                        2234
+                      </motion.div>
+                      <p className="text-xs tracking-wider text-stone-500 uppercase">
+                        {t("workbench.statsHours")}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
