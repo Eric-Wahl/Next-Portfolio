@@ -1,0 +1,257 @@
+---
+title: "Deux ans à bâtir mon homelab"
+description: "L'histoire de mon infrastructure auto-hébergée, des premiers docker compose sur un Dell de récup' jusqu'à un cluster de trois nœuds, un NAS ZFS et une vingtaine de services."
+date: "2026-09-20"
+tags: ["Homelab", "Self-Hosting", "Proxmox", "TrueNAS", "Réseau", "DevOps"]
+author: "Éric WAHL"
+published: true
+---
+
+# Deux ans de homelab : comment un vieil Optiplex a viré à l'obsession
+
+Parfois, les meilleures aventures commencent avec le rebut de quelqu'un d'autre. Juillet 2024, mon école se débarrasse d'un Dell Optiplex 7050. Personne n'en voulait. Moi si.
+
+À ce moment-là, j'ai un profil de développeur assez classique : j'enchaîne les projets entre les cours et le perso, je code beaucoup, et je ne me suis jamais vraiment soucié de ce qui se passe **après** le `git push`. Le déploiement, l'hébergement, l'infra, c'était une boîte noire que quelqu'un d'autre gérait. Ce petit Optiplex allait changer ça pour de bon.
+
+Spoiler : deux ans plus tard, j'ai un cluster de trois machines, un NAS de plusieurs téraoctets, une vingtaine de services, et une conviction profonde que je ne reviendrai jamais en arrière. Voici comment on en arrive là, une décision (et une erreur) à la fois.
+
+![Final Homelab](https://snapfilething.ericwlab.xyz/uploads/20260919_200605_1789929839_8c375cc5_.jpg)
+
+## Le déclic Docker
+
+Avant l'Optiplex, il y avait Docker. À force de m'exercer dessus pour mes projets, un truc a fait tilt : la reproductibilité. Un `docker compose up`, et la même stack se relance à l'identique, ici ou ailleurs, sans le fameux "pourtant ça marche sur ma machine". Cette simplicité m'a donné envie d'aller plus loin, et de creuser du côté du self-hosting.
+
+J'avais déjà tâté du VPS chez OVH pour héberger deux-trois trucs. Alors j'ai fait un calcul rapide, celui que fait tout le monde juste avant de tomber dans le terrier du lapin.
+
+> Un VPS avec 2 Go de RAM, 2 vCPU et 50 Go de stockage, ça tourne autour de quelques euros par mois. Chez moi, avec du matériel que j'ai déjà, je peux avoir quatre fois plus de puissance, un contrôle total, et surtout un terrain d'apprentissage sans limite.
+
+Le raisonnement financier n'était qu'un prétexte, soyons honnêtes. Le vrai moteur, c'était l'envie d'apprendre et de tout maîtriser de bout en bout. Mais le prétexte tenait la route, alors ni une ni deux.
+
+## Premier serveur : un Dell, Ubuntu, et mon chaton sur le clavier
+
+J'ai redonné un coup de jeune à l'Optiplex, changé la pâte thermique, et installé un bon vieux Ubuntu Server. La sensation était grisante de simplicité : je pose mes stacks `docker compose`, je les lance, et tout devient accessible. Pas d'abstraction, pas de facturation à l'heure, juste ma machine qui fait tourner mes projets.
+
+![Optichat](https://snapfilething.ericwlab.xyz/uploads/20240714_134835_1789929231_dcf2d86c_.jpg)
+
+L'installation s'est d'ailleurs faite sous la haute surveillance de mon chat, confortablement installé sur le clavier.
+
+C'est là aussi que j'ai commencé à apprendre l'aspect réseau, vraiment. Ouvrir uniquement les ports strictement nécessaires sur la box, comprendre le DHCP, réserver une IP, faire en sorte que mes projets soient joignables depuis Internet sans transformer mon salon en passoire. Des notions que je survolais avant, et qui prenaient soudain un sens concret parce que c'était _ma_ machine, _mon_ réseau, _mes_ données.
+
+Puis une prise de conscience est arrivée : Docker isole déjà pas mal les services les uns des autres, c'est vrai. Mais si le démon Docker de la machine tombe, pour une raison ou une autre, tout tombe avec lui, d'un bloc. Un seul point de défaillance pour tout ce que j'hébergeais. Ça me dérangeait.
+
+C'est en cherchant à résoudre ce problème que j'ai découvert Proxmox.
+
+## Proxmox entre en scène, et le Dell prend sa retraite
+
+Proxmox VE, c'est un hyperviseur : un système dont le métier est de faire tourner des machines virtuelles et des conteneurs, chacun bien isolé, avec la possibilité d'en créer, d'en cloner, d'en sauvegarder et d'en déplacer à volonté. En découvrant ça, et l'étendue des services qu'on peut auto-héberger, j'ai compris que le Dell ne suffirait plus.
+
+Il n'aura finalement servi que deux mois. Car son grand frère pointait déjà le bout de son nez : un **Lenovo ThinkStation P700**. Deux processeurs Xeon, 80 Go de RAM, une vraie bête de station de travail. Ça me rapprochait tellement de l'image fantasmée que je me faisais d'un "serveur" : des gros processeurs, beaucoup de RAM, une carte mère immense. Le rêve.
+
+L'installation de Proxmox a été une révélation. Ma première VM a repris tout ce que je faisais sur le Dell, mais maintenant je pouvais créer des machines à la demande, exactement comme celles que je louais chez OVH quelques mois plus tôt, sauf que là, elles étaient à moi.
+
+> **Pour les curieux du détail (pve-home aujourd'hui)** : le P700 a beaucoup maigri depuis. Il tourne désormais sur un seul Xeon E5-2650L v3 (12 cœurs / 24 threads), 48 Go de RAM, en Legacy BIOS. La plateforme est une Haswell-EP de 2015 : l'uncore, les contrôleurs mémoire et les liens QPI ne s'endorment jamais vraiment, donc le plancher de consommation tourne autour de 45 W au repos. On y reviendra, parce que ces watts, j'ai passé du temps à les traquer.
+
+## La chasse aux watts
+
+Avoir une grosse machine, c'est cool. La payer en électricité toute l'année, beaucoup moins. Et c'est devenu ma contrainte numéro un.
+
+Les deux Xeon d'origine offraient une puissance et une résilience folles, mais ils dépassaient les 180 W au repos. Pour donner un ordre d'idée concret : un serveur qui tire 180 W en continu, ça représente plus de 20 euros par mois. Vingt euros. Par mois. Juste pour héberger mes sites web et bidouiller. Sans parler du bruit, qui va souvent de pair avec la consommation.
+
+Alors j'ai fait la chasse, méthodiquement :
+
+- Ne garder qu'un seul des deux CPU, puis le remplacer par une variante avec plus de cœurs mais cadencée plus bas (le suffixe "L" des Xeon, pour _low power_)
+- Troquer le ventilateur serveur d'origine, une soufflerie de décollage, contre un Noctua silencieux
+- Passer un temps considérable dans le BIOS à désactiver tout ce que je n'utiliserais jamais
+
+Le silence et l'économie d'énergie sont devenus des critères de conception à part entière, au même titre que la puissance. Une leçon que je réappliquerai à chaque évolution.
+
+## Un NAS maison : TrueNAS, ZFS et le choix (assumé) des SSD
+
+L'idée d'avoir un vrai NAS, un stockage réseau centralisé et redondé, me trottait dans la tête. Restait à décider du plus important : les disques.
+
+Le réflexe classique, c'est de partir sur de gros disques durs mécaniques : beaucoup de téraoctets pour pas cher. Mais je voulais du silence et de la sobriété énergétique avant tout, et pour ma volumétrie de l'époque, des SSD consommaient nettement moins tout en étant totalement muets. Je suis donc parti sur trois SSD Samsung d'1 To, dont un pour la redondance.
+
+Pour la partie logicielle, direction TrueNAS, en m'appuyant énormément sur les vidéos de la chaîne Hardware Haven, qui m'ont sauvé pour tout le setup NAS et bien au-delà. TrueNAS repose sur ZFS, un système de fichiers qui gère lui-même la redondance, vérifie l'intégrité des données en permanence et permet des instantanés (_snapshots_) quasi gratuits. Exactement ce que je cherchais.
+
+J'ai virtualisé TrueNAS sous Proxmox. Et là, première décision que j'ai fini par regretter : j'ai virtualisé Nextcloud _sous_ TrueNAS plutôt que comme un invité Proxmox à part entière, dans l'idée de "garder les métiers ensemble". Sur le moment ça semblait logique. À l'usage, ça mélangeait des responsabilités qui auraient dû rester séparées.
+
+Peu importe, Nextcloud tournait, et il a rempli sa mission première : me dégoogliser. Fini OneDrive, qui devenait de plus en plus pénible. Mes fichiers, chez moi.
+
+![Lenovo P700](https://snapfilething.ericwlab.xyz/uploads/20240803_161420_1789930619_8a20aad2_.jpg)
+
+## Le réseau prend forme : Tailscale, Pi-hole, et la fin des ports ouverts
+
+En parallèle, j'ai musclé le réseau. J'ai installé un reverse proxy Caddy en frontal pour aiguiller le trafic vers les bons services. Deuxième décision regrettée : je l'ai installé directement sur l'OS Proxmox, l'hyperviseur lui-même, au lieu de le confiner dans son propre conteneur. Résultat, le proxy partageait le sort de l'hyperviseur, et ses dépendances venaient polluer le système hôte. À ne pas reproduire.
+
+J'ai aussi ajouté deux pièces qui ne m'ont plus jamais quitté :
+
+- **Tailscale**, pour intervenir sur mon serveur depuis l'extérieur et accéder à des services sans jamais les exposer publiquement. Un réseau privé qui me suit partout.
+- **Pi-hole**, pour filtrer les traqueurs et publicités à la source, et avoir mon propre DNS local.
+
+Mais un problème montait en puissance : à force d'aligner les services, gérer tous les ports que chaque conteneur devait exposer au reverse proxy, entre les VM, devenait un casse-tête. C'est là que j'ai basculé vers **Traefik**.
+
+**Pour les connaisseurs** : Traefik découvre les conteneurs directement via le socket Docker, en lisant leurs _labels_. Plus besoin d'ouvrir et de mapper un port par service, on décrit le routage à côté du conteneur, dans ses _labels_, et Traefik s'occupe du reste. Chaque service déclare simplement son port _interne_, jamais publié sur l'hôte : zéro port ouvert inutilement, tout passe par le socket. Ça a nettoyé l'infra d'un coup.
+
+![Schema homelab older](https://raw.githubusercontent.com/Eric-Wahl/HomeServerConfig/refs/heads/main/res/HomeLab.drawio.png)
+
+Cette première version tenait sur une poignée de briques : une VM WebHost pour mes projets, une stack de monitoring (Grafana et Prometheus pour tout surveiller), TrueNAS avec Nextcloud, Tailscale et Pi-hole. Propre, fonctionnel, et déjà bien plus que ce dont j'avais besoin. C'était censé être la fin de l'histoire.
+
+Ce n'était que le début.
+
+## Home Assistant, ou la domotique qui mérite son propre chapitre
+
+Puis j'ai découvert Home Assistant, et ma maison n'a plus jamais été la même.
+
+Avant, j'avais des appareils connectés en Wi-Fi pilotés par Google Home. Le problème du Wi-Fi pour la domotique, c'est qu'il est fragile, dépendant de la qualité du réseau, et qu'il grignote du précieux débit avec des dizaines de petits appareils qui bavardent en permanence. Sans compter la dépendance à un cloud que je ne contrôle pas.
+
+J'ai tout basculé sur **Zigbee**, un protocole radio dédié aux objets connectés, via Zigbee2MQTT. La différence est le jour et la nuit : le Wi-Fi est déchargé, les intégrations sont d'une simplicité déconcertante, à peu près tout peut se connecter à Home Assistant, et je récupère le contrôle total sur mes données et ma localisation. Des interfaces soignées, des automatisations à l'infini.
+
+![HomeAssistant](https://snapfilething.ericwlab.xyz/uploads/ha_1789929708_9612254f_.png)
+
+Honnêtement, Home Assistant mériterait un article entier à lui tout seul. Sa modularité me bluffe encore tous les jours. C'est le genre d'outil qu'on n'imagine plus quitter une fois qu'on y a goûté.
+
+## Mai 2026 : le jour où le chat a failli tuer mon serveur
+
+Je rentre chez moi un soir de mai 2026. Mon PC ne s'allume plus. Rien. Le vide.
+
+Cette poignée de secondes où je réalise que toutes mes données, toutes mes configurations, tout mon travail des derniers mois pourrait avoir disparu, je m'en souviens précisément. La panique, la boule au ventre, le film qui défile.
+
+Puis je regarde derrière le meuble. Le chat, un collègue de mon fidèle superviseur d'installations Ubuntu, avait simplement éteint la multiprise avec sa patte.
+
+Plus de peur que de mal, donc. Mais la leçon, elle, est restée gravée : il faut redonder davantage, sauvegarder mes configurations, dupliquer mes données selon la règle du 3-2-1 (trois copies, sur deux supports différents, dont une hors site), et surtout **documenter**. Une frayeur de dix secondes causée par un chat aura fait plus pour ma rigueur que n'importe quel tutoriel.
+
+## Trop de mots de passe : l'arrivée d'Authentik
+
+Autre problème, plus insidieux : la prolifération des comptes. Chaque service son login, son mot de passe, sa page de connexion. Ça devenait ingérable.
+
+En traînant sur le subreddit r/selfhosted, je tombe par hasard sur **Authentik**. Dès la première lecture, je sais que ce sera ma solution. Authentik est un fournisseur d'identité (SSO) : au lieu de dizaines de comptes, on se connecte une seule fois, et cette identité déverrouille tous les services compatibles.
+
+> **Pour les connaisseurs** : Authentik joue le rôle de fournisseur OIDC pour Immich, Nextcloud et Outline. J'étais d'abord parti sur Authelia, dont la configuration YAML fonctionnait jusqu'à l'échange de jeton, avant de se heurter à une cascade de désaccords sur `token_endpoint_auth_method`, PKCE et les `response_modes`, chacun masquant le suivant. Authentik règle tout ça via son interface, avec validation à la saisie. Le prix à payer, c'est la RAM (autour d'1 Go, contre quelques dizaines de Mo pour Authelia).
+
+## Voir plus grand : la décision du NAS dédié
+
+Tout tournait bien. J'aurais pu m'arrêter là. Mais ranger, catégoriser, optimiser, c'est un besoin quasi physique chez moi, et l'envie de passer à l'échelle supérieure était trop forte.
+
+S'est alors ouverte une longue, très longue phase de réflexion. Deux nœuds supplémentaires ? Un seul ? Un nœud Proxmox de plus, ou un NAS dédié ? Fallait-il monter mon propre routeur sous OPNsense, découper mon réseau en sous-réseaux bien rangés pour satisfaire mon besoin de tout classer par catégories et par nombres ?
+
+J'ai fini par revenir au besoin initial, avec pragmatisme : un NAS _dédié_, orienté stockage, séparé du reste. Décharger le gros Lenovo, créer une redondance qui ne repose plus sur une seule machine.
+
+Cette recherche m'a quand même transformé en acteur conscient du réseau qui transite chez moi. J'ai appris qu'il ne sert à rien d'avoir une box qui délivre 8 Gb/s en descente si la carte réseau de la machine plafonne à 1 Gb/s. Quel plaisir de débloquer ce goulot avec une carte 10 Gb et de profiter enfin du réseau à pleine puissance.
+
+![Network](https://snapfilething.ericwlab.xyz/uploads/network_1789930250_3aaa878a_.png)
+
+> Je me souviens encore de télécharger mes jeux à 20 Mbits/s en ADSL. Aujourd'hui, une mise à jour, un jeu entier, ça se compte en minutes, parfois en secondes. Il y a quelque chose de profondément satisfaisant à sentir que l'infrastructure ne bride plus rien.
+
+## Choisir le matériel, entre esthétique et pénurie
+
+Nouvelle contrainte, et pas des moindres : mon homelab devait rester **esthétique**. Pas question que ça ressemble à un datacenter miniature posé dans le salon.
+
+Le boîtier **Jonsbo N4** répondait parfaitement à ce besoin, avec sa façade en bois qui le fait passer pour un objet déco plutôt que pour du matériel serveur. Pour le stockage, retour vers des disques mécaniques cette fois : trois **WD Red de 4 To**. La volumétrie visée rendait les SSD trop chers à amortir (avec les pénuries, la différence de prix ne se serait jamais rentabilisée avant huit ans), et j'ai fait la paix avec ce compromis.
+
+![Jonsbo N4](https://snapfilething.ericwlab.xyz/uploads/20260808_132458_1789930368_bc3d4f8b_.jpg)
+
+D'ailleurs, la pénurie de composants, dopée par la ruée sur l'IA, a rendu la recherche de 64 Go de RAM et de disques durs à prix correct particulièrement pénible. Sans doute la partie la moins amusante de toute l'aventure.
+
+Le reste de la config a été choisi avec soin : un CPU capable de décoder efficacement des fichiers vidéo, une carte mère au bon format avec les bonnes fonctionnalités, et une carte HBA pour envoyer les disques en accès direct à TrueNAS via IOMMU, une leçon apprise entre-temps.
+
+> **Pour les connaisseurs (pve-nas)** : i5-12400 (6c/12t Alder Lake) avec son iGPU UHD 730 et QuickSync pour le transcodage matériel, 64 Go de DDR4. La carte HBA est une LSI SAS2008 flashée en **mode IT**, ce qui expose les disques nus à TrueNAS sans couche RAID matérielle parasite. Elle vit dans son propre groupe IOMMU, isolé, donc aucun _ACS override_ nécessaire, et passe entière à la VM TrueNAS.
+> La leçon derrière ce choix : donner à TrueNAS un contrôle _direct_ sur les disques physiques, pas des disques virtuels. ZFS veut voir le vrai matériel, les vrais numéros de série SMART, pour faire correctement son travail.
+
+## Le montage, le cluster, et la satisfaction du rangement
+
+Le montage du PC a été un pur moment de plaisir. Cette sensation de glisser chaque disque dans sa baie, d'assembler pièce par pièce une machine qu'on a pensée dans sa tête pendant des semaines. Rien à voir avec du logiciel.
+
+![NAS Montage](https://snapfilething.ericwlab.xyz/uploads/20260808_132501_1789929919_dac713e5_.jpg)
+
+J'ai fait un choix d'architecture réfléchi : garder TrueNAS virtualisé sous Proxmox plutôt qu'en bare metal. Ça permet de relancer, sauvegarder et déplacer la VM d'une machine à l'autre facilement, et surtout d'utiliser Proxmox un cran au-dessus, en **cluster**. (Et il faut avouer que ça a une certaine classe de dire qu'on fait tourner un cluster à la maison.)
+
+Une fois le second nœud installé, TrueNAS déployé et le pool `tank` créé, j'ai migré Nextcloud, découvert **Immich** au passage (adieu Google Photos, en plus de Google Drive et OneDrive), et tout mis derrière Authentik. J'ai recyclé l'ancien matériel du premier NAS pour en faire un **NAS de sauvegarde** (deux SSD Samsung d'1 To en miroir), cible de réplications automatiques à plusieurs granularités.
+
+> **Pour les connaisseurs** : deux nœuds Proxmox en cluster (`HomeCluster`).
+
+|          | pve-home (P700)                | pve-nas (MSI B660M)          |
+| -------- | ------------------------------ | ---------------------------- |
+| Rôle     | compute, entrée réseau, backup | stockage, transcodage        |
+| CPU      | Xeon E5-2650L v3               | i5-12400 (QuickSync)         |
+| RAM      | 48 Go                          | 64 Go                        |
+| Stockage | pool `backup` (miroir 2× 1 To) | pool `tank` (RAIDZ1 3× 4 To) |
+
+La réplication ZFS pousse `tank/apps` et `tank/share` vers le pool `backup` chaque nuit, avec une rétention plus longue sur la destination que sur la source (deux mois contre un). C'est précisément ce décalage qui donne sa valeur à une sauvegarde : une suppression remarquée six semaines plus tard reste récupérable. Les médias, retéléchargeables, sont exclus. Reste le maillon manquant, que j'assume pour l'instant : les deux nœuds sont au même endroit, donc protégés d'une panne matérielle, pas d'un sinistre. La copie hors site est sur la liste.
+
+Et pour satisfaire mon petit côté maniaque de l'organisation, j'ai adopté une convention d'adressage IP simple et rigoureuse.
+
+> **La règle qui apaise mon TDAH** : le dernier octet de l'IP correspond au VMID. Un conteneur `2xx` porte l'IP `192.168.1.2x`. Immich (VM 203) est en `.23`, Nextcloud (VM 202) en `.22`, et ainsi de suite. Des plages sont réservées par usage : `.10-.19` pour le réseau, `.20-.29` pour le stockage, `.40-.49` pour le quotidien, `.50-.59` pour le compute. Voir une infrastructure entière rangée par nombres cohérents, c'est une satisfaction que je ne saurais pas totalement expliquer.
+
+![Proxmox](https://snapfilething.ericwlab.xyz/uploads/proxmox_1789930086_5aceba98_.png)
+
+## Documenter, ranger, contempler
+
+Avec l'échelle vient le besoin de documenter. J'ai installé **Outline**, une alternative auto-hébergée à Notion, et c'est là que je consigne désormais l'intégralité de mon parcours de self-hosting : les erreurs, ce qui marche, les évolutions, les procédures pour reproduire au besoin. Un wiki personnel qui est vite devenu inestimable.
+
+![Outline](https://snapfilething.ericwlab.xyz/uploads/outline_1789930180_e4d8e31f_.png)
+
+J'en ai profité pour corriger deux de mes regrets historiques. **Nginx Proxy Manager** a remplacé l'ancien Caddy, cette fois proprement confiné dans un conteneur LXC, avec une interface graphique qui rend la configuration limpide. Et j'ai monté un **Homepage**, un tableau de bord unique donnant accès à tous mes services d'un coup d'œil. Voir l'étendue de mon homelab rassemblée sur une seule page, il y a là une vraie fierté.
+
+![Homepage](https://snapfilething.ericwlab.xyz/uploads/homepage_1789929470_1fffdac0_.png)
+
+## Le deuxième incident : le quorum, la prise, et le serpent qui se mord la queue
+
+Tout est parfait. Tout tourne. Jusqu'au jour où je décide de mettre à jour, l'air de rien, le firmware de la prise Zigbee branchée derrière mon serveur, celle qui me sert justement à monitorer la consommation totale du homelab.
+
+Ce que je ne savais pas, c'est que la mise à jour allait couper la prise, et donc forcer le redémarrage des nœuds. Et là, un magnifique effet domino se déclenche, digne d'un scénario écrit exprès pour m'humilier :
+
+1. Le NAS n'était pas configuré dans son BIOS pour redémarrer automatiquement au retour du courant.
+2. Sa propre prise connectée ne se rallumait pas toute seule non plus.
+3. Sans être physiquement présent, et sans Home Assistant allumé, aucun moyen de relancer quoi que ce soit à distance.
+4. Sauf que, pour lancer Home Assistant, le Lenovo devait démarrer Proxmox et monter le cluster.
+5. Sauf qu'avec seulement deux nœuds, impossible d'obtenir un **quorum**. Le cluster refusait donc de se lancer.
+
+Le serpent se mordait la queue. Pour relancer le système, il fallait Home Assistant ; pour lancer Home Assistant, il fallait le système.
+
+> **Pour les connaisseurs** : dans un cluster Proxmox, le quorum est la majorité des votes nécessaire pour qu'un nœud accepte de fonctionner, une protection contre le _split-brain_ (deux moitiés de cluster qui divergeraient chacune de leur côté). Avec deux nœuds seulement, la perte d'un seul fait tomber la majorité, et les survivants se figent par sécurité. C'est mathématique, et parfaitement logique une fois qu'on l'a vécu dans la douleur.
+
+Cet incident a révélé une chaîne de petites choses à corriger : le comportement du BIOS au retour du courant, celui de la prise sans Home Assistant, et surtout ce fichu quorum qui réclamait un troisième votant, quelle que soit sa nature.
+
+## Un troisième nœud minuscule : le Raspberry Pi qdevice
+
+Ayant déjà largement assez de puissance de feu, hors de question de rajouter un troisième nœud complet juste pour un vote. Il me fallait un arbitre, pas un colosse.
+
+Un **Raspberry Pi**, dans un boîtier Pironman, généreusement doté de 16 Go, s'est imposé comme le candidat parfait : faible consommation, encombrement minimal, joli, disponible. Il joue le rôle de **qdevice**, un simple témoin externe qui apporte le troisième vote et consolide le quorum, tout en étant branché sur une prise non connectée pour éviter de reproduire le scénario catastrophe.
+
+> **Pour les connaisseurs** : un QDevice est un votant externe déclaré au cluster Corosync via `corosync-qdevice`. Il ne fait tourner aucune charge, il tranche simplement en cas d'égalité, ce qui suffit à débloquer un cluster à deux nœuds. Idéalement, je le délocaliserais physiquement pour le sortir du même point de défaillance, mais c'est une amélioration que j'accepte de reporter pour l'instant.
+
+Ce petit Raspberry Pi a fait plus que voter. Il héberge aussi **Komodo**, en remplacement de Portainer (qui s'oriente de plus en plus vers Kubernetes et resserre sa licence gratuite), une seconde _exit node_ Tailscale pour garder l'accès à mon homelab quoi qu'il arrive aux deux autres machines, et un Pi-hole de secours qui se synchronise tout seul. Un filet de sécurité discret et redoutablement efficace.
+
+## Où j'en suis aujourd'hui
+
+Aujourd'hui, l'ensemble ronronne, et chaque brique a sa place.
+
+![Schema Homelab Actuel](https://snapfilething.ericwlab.xyz/uploads/homelab_1789929766_1849b556_.jpg)
+
+Un NAS qui _nase_ à fond, avec des services qui ont changé mon quotidien : Nextcloud pour mes fichiers, Immich pour mes photos, Jellyfin pour mes médias (avec transcodage matériel via QuickSync), Outline pour ma documentation. Du compute qui _compute_, avec une infra Traefik pour tous mes projets. Home Assistant, indescriptiblement génial dans sa modularité. Et une organisation aux petits oignons qui apaise mon besoin de tout ranger.
+
+![Network Rack](https://makerworld.bblmw.com/makerworld/model/US8a25ddb257ce4/design/06dee4cf446857ac.jpg?x-oss-process=image%2Fformat%2Cwebp)
+
+J'ai même modélisé et imprimé moi-même un desk mount rack et installé un dispatcher ethernet et mon switch dessus, pour avoir ce petit côté "salle serveur" tout en gardant une déco légère. URL : [Makerworld](https://makerworld.com/en/models/3185523-10-inch-2u-under-desk-server-rack#profileId-3603331)
+
+Ce qui me frappe le plus, avec le recul, c'est à quel point cet aspect infra me passionne. Au point qu'aujourd'hui, en tant que Software Engineer, je peux tout autant m'imaginer pivoter vers le DevOps. Ce homelab n'a pas seulement hébergé mes projets, il a redessiné la carte de ce que je veux faire.
+
+## La philosophie du self-hosting
+
+![Cat Philosophy](https://snapfilething.ericwlab.xyz/uploads/20260614_105316_1789930447_eba7e0ef_.jpg)
+
+S'il y a une chose que ces deux ans m'ont apprise, c'est que le self-hosting est une évolution constante, jamais figée. Il y a des niveaux pour tout le monde, du simple Raspberry Pi avec deux conteneurs jusqu'au cluster multi-nœuds avec réplication ZFS.
+
+Il y a encore tellement de niveaux au delà de ce que j'ai construit. Des services que je n'ai pas encore explorés, des optimisations que je n'ai pas encore faites, des problèmes que je n'ai pas encore rencontrés. Et c'est ça qui est excitant : il y a toujours quelque chose à apprendre, à améliorer, à découvrir.
+
+La complexité et le coût sont d'une amplitude vertigineuse, et c'est tout l'intérêt : chaque besoin est différent, chaque curiosité peut se nourrir activement. On n'est jamais obligé de tout faire d'un coup. On avance une frayeur, une panne, une lecture Reddit à la fois.
+
+## Et après ?
+
+La liste des pistes est aussi longue que réjouissante. Délocaliser une sonde sur un VPS pour continuer à monitorer même en cas de panne Internet. Installer un onduleur (UPS) pour absorber les coupures. Remplacer le gros Lenovo, aujourd'hui sous-utilisé, par un Mini PC bien plus sobre. Versionner mes configurations Proxmox dans un dépôt Git. Anticiper le remplacement des disques du pool `tank`, dont certains approchent des heures de vol respectables.
+
+Et surtout, toutes celles que je n'ai pas encore découvertes, celles que je trouverai en regardant des vidéos, en lisant des fils Reddit, et surtout en me cognant à des problèmes bien concrets pour ensuite apprendre à les résoudre. C'est ce qui résume le mieux mes journées dans le self-hosting.
+
+Pour rien au monde je ne reviendrais à une vie sans tout ça.
+
+_Un homelab en tête, ou une envie de vous lancer ? N'hésitez pas à me contacter. J'adorerais échanger sur vos infrastructures, vos choix d'architecture, ou simplement vous aider à débloquer un quorum récalcitrant._
